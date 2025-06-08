@@ -753,7 +753,7 @@
                     },
                     {
                         question: "'एक कहानी यह भी' किसकी आत्मकथा है?",
-                        options: ["महादेवी वर्मा", "सुभद्राकुमारी चौहान", "मन्नू भंडारी", "कृष्णा सोबती"],
+                        options: ["महादेवी वर्मा", "सुभद्राकुमारी चौहान", "Mना भंडारी", "कृष्णा सोबती"],
                         correct: 2
                     },
                     {
@@ -1377,7 +1377,7 @@
         let currentLevel = 1;
         let currentQuestion = 0;
         let score = 0;
-        let timeLeft = 30;
+        let timeLeft = 30; // Default timer
         let timer;
         let answers = [];
         let startTime = Date.now();
@@ -1425,8 +1425,13 @@
             const progress = ((currentQuestion) / 5) * 100;
             document.getElementById('progress-bar').style.width = progress + '%';
             
-            // Start timer
-            timeLeft = 30;
+            // Set timer based on subject
+            if (currentQuiz === 'math') {
+                timeLeft = 45; // Math quiz timer starts from 45 seconds
+            } else {
+                timeLeft = 30; // Default timer for other subjects
+            }
+            
             startTime = Date.now();
             updateTimer();
             timer = setInterval(updateTimer, 1000);
@@ -1515,13 +1520,39 @@
             document.getElementById('level-time').textContent = avgTime + 's';
             document.getElementById('level-accuracy').textContent = accuracy + '%';
             
+            // Determine if the level is passed based on the new criteria
+            let levelPassed = false;
+            if (currentLevel === 5) {
+                levelPassed = (levelScore === 5); // Level 5 requires 5/5 correct
+            } else {
+                levelPassed = (levelScore >= 4); // Levels 1-4 require minimum 4/5 correct
+            }
+
             if (currentLevel >= 5) {
                 document.getElementById('continue-btn').style.display = 'none';
                 setTimeout(() => {
                     showQuizComplete();
                 }, 3000);
             } else {
-                document.getElementById('continue-btn').style.display = 'inline-block';
+                if (levelPassed) {
+                    document.getElementById('continue-btn').style.display = 'inline-block';
+                    document.getElementById('continue-btn').textContent = 'Continue to Next Level';
+                    document.getElementById('level-complete-title').textContent = 'Level Cleared!';
+                } else {
+                    document.getElementById('continue-btn').style.display = 'inline-block';
+                    document.getElementById('continue-btn').textContent = 'Try Level Again';
+                    document.getElementById('level-complete-title').textContent = 'Level Failed!';
+                    // If level failed, reset score for current level when retrying
+                    // The overall totalCorrect and totalTime will still accumulate, which is correct
+                    document.getElementById('continue-btn').onclick = () => {
+                        currentQuestion = 0; // Reset questions for current level
+                        answers = []; // Clear answers for current level
+                        score = 0; // Reset score for current level
+                        document.getElementById('level-complete-screen').style.display = 'none';
+                        document.getElementById('quiz-screen').style.display = 'block';
+                        loadQuestion();
+                    };
+                }
             }
         }
 
@@ -1529,6 +1560,7 @@
             currentLevel++;
             currentQuestion = 0;
             answers = [];
+            score = 0; // Reset score for the new level
             
             document.getElementById('level-complete-screen').style.display = 'none';
             document.getElementById('quiz-screen').style.display = 'block';
@@ -1596,3 +1628,4 @@
     </script>
 </body>
 </html>
+
